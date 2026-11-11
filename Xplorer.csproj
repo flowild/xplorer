@@ -3,8 +3,16 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Version>0.1.0</Version>
   </PropertyGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="src\Wpf\App.xaml" />
+    <Page Remove="src\Wpf\App.xaml" />
+    <Compile Remove="WinUI\**\*.cs" />
+    <Page Remove="WinUI\**\*.xaml" />
+    <ApplicationDefinition Remove="WinUI\**\*.xaml" />
+  </ItemGroup>
 </Project>

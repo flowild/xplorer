@@ -1,7 +1,0 @@
-# UI technology evaluation
-
-The current application remains a WPF prototype while WinUI 3 is evaluated. WPF already builds in the present environment and supports the prototype's existing navigation and Windows integration. WinUI 3 is Microsoft's recommended native UI framework for new Windows apps and would offer modern Windows controls, but migration requires a Windows App SDK build environment and a separate working prototype before a final decision.
-
-Microsoft documents Windows 10 version 1809 (build 17763) as the minimum for the Windows App SDK; the chosen SDK, .NET runtime, packaging approach and exact supported Windows releases still need to be verified together before release. Sources: [Windows versions and SDK overview](https://learn.microsoft.com/en-us/windows/apps/get-started/versioning-overview), [WinUI 3](https://learn.microsoft.com/windows/apps/WinUI), and [Windows App SDK support](https://learn.microsoft.com/en-us/windows/apps/windows-app-sdk/support).
-
-On this machine the Windows App SDK template/package was not available locally. Attempts to install `Microsoft.WindowsAppSDK.WinUI.CSharp.Templates` failed because the NuGet feeds were unavailable or invalid. No WinUI app was built or run; this is a preliminary assessment, not a performance or compatibility comparison. Once the package feed and SDK are available, build a small navigation/list prototype and compare startup, large-folder behavior, accessibility, shell integration, packaging and Windows 10/11 behavior before deciding whether to migrate.

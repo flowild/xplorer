@@ -1,6 +1,6 @@
 # Xplorer
 
-Projektstand und nächste Schritte stehen in [PLAN.md](PLAN.md).
+Projektstand und nächste Schritte stehen in [docs/PLAN.md](docs/PLAN.md).
 
 Ein früher Windows-Dateimanager-Prototyp. Er zeigt Ordnerinhalte, öffnet Dateien über Windows und unterstützt Pfadeingabe, übergeordneten Ordner sowie Zurück und Vorwärts. Ordner werden im Hintergrund geladen; eine neue Navigation verwirft das Ergebnis einer älteren Anfrage.
 
@@ -22,10 +22,16 @@ Ordnergrößen werden standardmäßig im Hintergrund berechnet und können über
 
 Windows 10/11 und das .NET 10 SDK mit Windows-Desktop-Unterstützung sind erforderlich:
 
+Per Doppelklick starten: `Start-Xplorer-WPF.cmd` für WPF oder `Start-Xplorer-WinUI.cmd` für die experimentelle WinUI-Fassung. Die Dateien bauen das jeweilige Projekt vor dem Start; bei einem Buildfehler bleibt das Konsolenfenster mit der Meldung geöffnet.
+
+Alternativ im Terminal:
+
 ```powershell
 dotnet run --project Xplorer.csproj
 ```
 
+Die getrennte experimentelle WinUI-Fassung kann mit `dotnet run --project WinUI/Xplorer.WinUI.csproj -p:Platform=x64` gestartet werden. Beim ersten Build sind die im Projekt angegebenen NuGet-Pakete nötig. Sie verwendet einen experimentellen Ressourcen-Workaround und dieselbe Favoriten-Datei wie der WPF-Prototyp. Funktionen, Windows-Dialoge und Zwischenablage müssen vor produktiver Nutzung noch interaktiv getestet werden.
+
 Vor einem erneuten Build oder Start ein bereits geöffnetes Xplorer-Fenster schließen. Windows sperrt die laufende `Xplorer.exe`; andernfalls kann der Build mit MSB3026/MSB3027 scheitern. Falls kein Fenster sichtbar ist, den zugehörigen Xplorer-Prozess im Task-Manager beenden und den Befehl erneut ausführen.
 
-Die maßgebliche Projektversion steht in `Xplorer.csproj`. WPF dient zunächst dazu, die Grundfunktionen lokal zu erproben; der Stand der WinUI-3-Prüfung steht in [UI-DECISION.md](UI-DECISION.md). Die Shell-Integration ist noch unvollständig. Große und langsame Ordner werden noch vollständig eingelesen, bevor sie angezeigt werden; die Oberfläche bleibt dabei bedienbar, aber eine blockierte Dateisystemabfrage lässt sich nicht sofort abbrechen. Windows-10/11-Kompatibilität und Leistung müssen auf beiden Systemen noch praktisch geprüft werden.
+Die maßgebliche Projektversion steht in `Xplorer.csproj`. WPF dient zunächst dazu, die Grundfunktionen lokal zu erproben; der Stand der WinUI-3-Prüfung steht in [docs/UI-DECISION.md](docs/UI-DECISION.md). Die Shell-Integration ist noch unvollständig. Große und langsame Ordner werden noch vollständig eingelesen, bevor sie angezeigt werden; die Oberfläche bleibt dabei bedienbar, aber eine blockierte Dateisystemabfrage lässt sich nicht sofort abbrechen. Windows-10/11-Kompatibilität und Leistung müssen auf beiden Systemen noch praktisch geprüft werden.

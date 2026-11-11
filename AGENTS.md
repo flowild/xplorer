@@ -10,9 +10,9 @@ Das Repository begann ohne Anwendungscode. Architekturentscheidungen sind Vorsch
 
 Diese `AGENTS.md` bei jeder relevanten Änderung an Anforderungen, Projektstruktur, Architekturentscheidungen, Arbeitsabläufen oder Werkzeugen prüfen und unmittelbar aktualisieren, damit sie jederzeit dem tatsächlichen Projektstand entspricht. Bestätigte Nutzervorgaben aufnehmen; Erledigtes und Geplantes nicht verwechseln. Keine Zugangsdaten oder persönlichen Daten dokumentieren.
 
-Die laufende Planung und den überprüften Projektstand in [PLAN.md](PLAN.md) pflegen. Nach relevanten Änderungen erledigte, offene und blockierte Schritte sowie Prüfergebnisse und Einschränkungen aktualisieren. [README.md](README.md) und [UI-DECISION.md](UI-DECISION.md) bei Bedarf konsistent halten.
+Die laufende Planung und den überprüften Projektstand in [docs/PLAN.md](docs/PLAN.md) pflegen. Nach relevanten Änderungen erledigte, offene und blockierte Schritte sowie Prüfergebnisse und Einschränkungen aktualisieren. [README.md](README.md) und [docs/UI-DECISION.md](docs/UI-DECISION.md) bei Bedarf konsistent halten.
 
-Aktueller Ausgangspunkt: WPF-Prototyp mit .NET 10; die maßgebliche Version steht in `Xplorer.csproj`. WinUI 3 ist noch nicht als produktive Grundlage entschieden oder lokal als Prototyp gebaut. Einzelheiten und nächste Schritte stehen in `PLAN.md`.
+Aktueller Ausgangspunkt: WPF-Prototyp mit .NET 10 und ein separates, experimentelles WinUI-3-Projekt unter `WinUI/`; WPF-Oberfläche liegt in `src/Wpf/`, gemeinsam genutzte Logik in `src/Shared/`. Die Startdateien `Start-Xplorer-WPF.cmd` und `Start-Xplorer-WinUI.cmd` bauen und öffnen die jeweilige Fassung. Die maßgebliche Version steht in `Xplorer.csproj`. Der Nutzer möchte die WPF-Funktionen in WinUI 3 umsetzen. Die WinUI-Fassung ist noch nicht vollständig interaktiv geprüft oder als produktive Grundlage freigegeben. Einzelheiten und nächste Schritte stehen in `docs/PLAN.md`.
 
 ## Produkt und Prioritäten
 
