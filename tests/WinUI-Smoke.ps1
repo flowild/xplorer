@@ -111,6 +111,13 @@ try {
     if ($first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or $second.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected) { throw 'Clear selection did not clear both files.' }
     if ($null -eq (Find-Element 'NameProperty' '0 selected')) { throw 'Selection count did not reset.' }
     Write-Output 'PASS WinUI select all and clear selection'
+    $first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
+    (Find-Element 'NameProperty' 'Invert selection').GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    if ($first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or -not $second.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or $null -eq (Find-Element 'NameProperty' '2 selected')) { throw 'Invert selection did not invert a partial selection.' }
+    (Find-Element 'NameProperty' 'Invert selection').GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    if (-not $first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or $second.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or $null -eq (Find-Element 'NameProperty' '1 selected')) { throw 'Second inversion did not restore the selection.' }
+    (Find-Element 'NameProperty' 'Clear selection').GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    Write-Output 'PASS WinUI invert selection'
     $selected = $false
     $deadline = [DateTime]::UtcNow.AddSeconds(10)
     do {

@@ -34,7 +34,7 @@
             <Button Content="New folder" Click="NewFolder_Click"/><Button Content="New file" Click="NewFile_Click"/>
             <Button Content="Copy" Click="Copy_Click"/><Button Content="Cut" Click="Cut_Click"/><Button Content="Paste" Click="Paste_Click"/>
             <Button Content="Rename" Click="Rename_Click"/><Button Content="Delete" Click="Delete_Click"/>
-            <Button Content="Select all" Click="SelectAll_Click"/><Button Content="Clear selection" Click="ClearSelection_Click"/>
+            <Button Content="Select all" Click="SelectAll_Click"/><Button Content="Clear selection" Click="ClearSelection_Click"/><Button Content="Invert selection" Click="InvertSelection_Click"/>
           </StackPanel>
         </ScrollViewer>
         <Grid Grid.Row="2" ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="130"/><ColumnDefinition Width="160"/></Grid.ColumnDefinitions>

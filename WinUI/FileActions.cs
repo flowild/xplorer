@@ -53,6 +53,13 @@ public sealed partial class MainWindow
 
     private void SelectAll_Click(object sender, RoutedEventArgs e) => Files.SelectAll();
     private void ClearSelection_Click(object sender, RoutedEventArgs e) => Files.SelectedItems.Clear();
+    private void InvertSelection_Click(object sender, RoutedEventArgs e)
+    {
+        var selected = Files.SelectedItems.OfType<FolderItem>().ToHashSet();
+        var inverted = items.Where(item => !selected.Contains(item)).ToList();
+        Files.SelectedItems.Clear();
+        foreach (var item in inverted) Files.SelectedItems.Add(item);
+    }
     private void Files_SelectionChanged(object sender, SelectionChangedEventArgs e) => SelectionStatus.Text = $"{Files.SelectedItems.Count} selected";
     private bool IsFileListFocused()
     {
