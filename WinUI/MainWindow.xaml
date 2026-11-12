@@ -38,7 +38,7 @@
           </StackPanel>
         </ScrollViewer>
         <Grid Grid.Row="2" ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="130"/><ColumnDefinition Width="160"/></Grid.ColumnDefinitions>
-          <Button Content="Name" Tag="Name" Click="Sort_Click" HorizontalAlignment="Stretch"/><Button Grid.Column="1" Content="Type" Tag="Type" Click="Sort_Click" HorizontalAlignment="Stretch"/><Button Grid.Column="2" Content="Size" Tag="Size" Click="Sort_Click" HorizontalAlignment="Stretch"/><Button Grid.Column="3" Content="Modified" Tag="Modified" Click="Sort_Click" HorizontalAlignment="Stretch"/>
+          <Button x:Name="SortName" Content="Name" Tag="Name" Click="Sort_Click" HorizontalAlignment="Stretch"/><Button Grid.Column="1" x:Name="SortType" Content="Type" Tag="Type" Click="Sort_Click" HorizontalAlignment="Stretch"/><Button Grid.Column="2" x:Name="SortSize" Content="Size" Tag="Size" Click="Sort_Click" HorizontalAlignment="Stretch"/><Button Grid.Column="3" x:Name="SortModified" Content="Modified" Tag="Modified" Click="Sort_Click" HorizontalAlignment="Stretch"/>
         </Grid>
         <ListView x:Name="Files" Grid.Row="3" SelectionMode="Extended" SelectionChanged="Files_SelectionChanged" DoubleTapped="Files_DoubleTapped" RightTapped="Files_RightTapped" KeyDown="Files_KeyDown">
           <ListView.ItemContainerStyle><Style TargetType="ListViewItem"><Setter Property="HorizontalContentAlignment" Value="Stretch" /></Style></ListView.ItemContainerStyle>

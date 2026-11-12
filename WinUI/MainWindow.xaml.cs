@@ -42,6 +42,7 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         Files.ItemsSource = items;
+        UpdateSortHeaders();
         AppWindow.Closing += (_, e) => { if (fileOperationRunning) { e.Cancel = true; Status.Text = "Wait for the file operation to finish or cancel it in the Windows dialog."; } };
         Closed += (_, _) => { watcherVersion++; watcher?.Dispose(); refreshTimer.Stop(); load?.Cancel(); sizes?.Cancel(); search?.Cancel(); };
         sortTimer.Tick += (_, _) => { sortTimer.Stop(); if (sortColumn == "Size") SetItems(items.ToList(), true); };
@@ -245,7 +246,24 @@ public sealed partial class MainWindow : Window
     private async void Back_Click(object sender, RoutedEventArgs e) { if (active is { Index: > 0 } tab) await NavigateAsync(tab.History[tab.Index - 1], tab.Index - 1); }
     private async void Forward_Click(object sender, RoutedEventArgs e) { if (active is { } tab && tab.Index + 1 < tab.History.Count) await NavigateAsync(tab.History[tab.Index + 1], tab.Index + 1); }
     private async void Up_Click(object sender, RoutedEventArgs e) { if (active?.Path is not { } path || path == DrivesPath) return; await NavigateAsync(Directory.GetParent(path)?.FullName ?? DrivesPath); }
-    private void Sort_Click(object sender, RoutedEventArgs e) { if (sender is Button { Tag: string column }) { descending = sortColumn == column && !descending; sortColumn = column; SetItems(items.ToList(), true); } }
+    private void Sort_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string column }) return;
+        descending = sortColumn == column && !descending;
+        sortColumn = column;
+        UpdateSortHeaders();
+        SetItems(items.ToList(), true);
+    }
+    private void UpdateSortHeaders()
+    {
+        foreach (var button in new[] { SortName, SortType, SortSize, SortModified })
+        {
+            string column = (string)button.Tag;
+            bool activeColumn = column == sortColumn;
+            button.Content = activeColumn ? $"{column} {(descending ? "↓" : "↑")}" : column;
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, activeColumn ? $"{column}, sorted {(descending ? "descending" : "ascending")}" : $"Sort by {column}");
+        }
+    }
     private async void FolderSizes_Click(object sender, RoutedEventArgs e) { if (active?.Path is { } path) await NavigateAsync(path, active.Index); }
     private async void Files_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {

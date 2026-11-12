@@ -29,6 +29,16 @@ try {
     do { Start-Sleep -Milliseconds 250; $file = Find-Element 'NameProperty' 'ui-test-file.txt' } until ($null -ne $file -or [DateTime]::UtcNow -ge $deadline)
     if ($null -eq $file) { throw 'Test file did not appear in the folder listing.' }
     Write-Output 'PASS WinUI startup and navigation to a temporary folder'
+    $nameSort = Find-Element 'AutomationIdProperty' 'SortName'
+    $sizeSort = Find-Element 'AutomationIdProperty' 'SortSize'
+    if ($null -eq $nameSort -or $null -eq $sizeSort -or $nameSort.Current.Name -ne 'Name, sorted ascending') { throw 'Initial sort indicator missing.' }
+    $sizeSort.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    if ($sizeSort.Current.Name -ne 'Size, sorted ascending' -or $nameSort.Current.Name -ne 'Sort by Name') { throw 'Ascending sort indicator failed.' }
+    $sizeSort.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    if ($sizeSort.Current.Name -ne 'Size, sorted descending') { throw 'Descending sort indicator failed.' }
+    $nameSort.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    if ($nameSort.Current.Name -ne 'Name, sorted ascending') { throw 'Sort indicator did not return to Name.' }
+    Write-Output 'PASS WinUI sort indicators'
     foreach ($label in @('New folder', 'New file', 'Copy', 'Cut', 'Paste', 'Rename', 'Delete')) {
         $button = Find-Element 'NameProperty' $label
         if ($null -eq $button -or $button.Current.ControlType -ne [System.Windows.Automation.ControlType]::Button) { throw "File action button not found: $label" }
