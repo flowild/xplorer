@@ -21,8 +21,16 @@ public sealed partial class MainWindow
     {
         bool control = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) != 0;
         bool shift = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & CoreVirtualKeyStates.Down) != 0;
-        if (control && e.Key == VirtualKey.T) { AddTab(); e.Handled = true; }
-        else if (control && e.Key == VirtualKey.W && Tabs.SelectedItem is TabViewItem tab && Tabs.TabItems.Count > 1) { Tabs.TabItems.Remove(tab); e.Handled = true; }
+        bool alt = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu) & CoreVirtualKeyStates.Down) != 0;
+        if (control && !shift && !alt && e.Key == VirtualKey.L) { Address.Focus(FocusState.Programmatic); Address.SelectAll(); e.Handled = true; }
+        else if (control && !shift && !alt && e.Key == VirtualKey.F) { SearchQuery.Focus(FocusState.Programmatic); SearchQuery.SelectAll(); e.Handled = true; }
+        else if (alt && !control && !shift && e.Key == VirtualKey.Left && active is { Index: > 0 } back) { e.Handled = true; await NavigateAsync(back.History[back.Index - 1], back.Index - 1); }
+        else if (alt && !control && !shift && e.Key == VirtualKey.Right && active is { } forward && forward.Index + 1 < forward.History.Count) { e.Handled = true; await NavigateAsync(forward.History[forward.Index + 1], forward.Index + 1); }
+        else if (alt && !control && !shift && e.Key == VirtualKey.Up && active?.Path is { } parent && parent != DrivesPath) { e.Handled = true; await NavigateAsync(Directory.GetParent(parent)?.FullName ?? DrivesPath); }
+        else if (e.Key == VirtualKey.Escape && search is not null) { e.Handled = true; search.Cancel(); }
+        else if (control && shift && !alt && e.Key == VirtualKey.N) { e.Handled = true; await CreateAsync(true); }
+        else if (control && e.Key == VirtualKey.T) { AddTab(); e.Handled = true; }
+        else if (control && e.Key == VirtualKey.W && Tabs.SelectedItem is TabViewItem tab && Tabs.TabItems.Count > 1) { Tabs.TabItems.Remove(tab); UpdateTabCloseButtons(); e.Handled = true; }
         else if (control && e.Key == VirtualKey.Tab && Tabs.TabItems.Count > 1) { Tabs.SelectedIndex = (Tabs.SelectedIndex + (shift ? -1 : 1) + Tabs.TabItems.Count) % Tabs.TabItems.Count; e.Handled = true; }
         else if (e.Key == VirtualKey.F5 && active?.Path is { } path) { e.Handled = true; await NavigateAsync(path, active.Index); }
         else if (IsFileListFocused())
@@ -35,11 +43,26 @@ public sealed partial class MainWindow
         }
     }
 
+    private async void NewFolder_Click(object sender, RoutedEventArgs e) => await CreateAsync(true);
+    private async void NewFile_Click(object sender, RoutedEventArgs e) => await CreateAsync(false);
+    private async void Copy_Click(object sender, RoutedEventArgs e) => await CopySelectionAsync(false);
+    private async void Cut_Click(object sender, RoutedEventArgs e) => await CopySelectionAsync(true);
+    private async void Paste_Click(object sender, RoutedEventArgs e) => await PasteAsync();
+    private async void Rename_Click(object sender, RoutedEventArgs e) => await RenameAsync();
+    private async void Delete_Click(object sender, RoutedEventArgs e) => await DeleteAsync();
+
     private bool IsFileListFocused()
     {
         var element = FocusManager.GetFocusedElement(Files.XamlRoot) as DependencyObject;
         while (element is not null) { if (ReferenceEquals(element, Files)) return true; element = VisualTreeHelper.GetParent(element); }
         return false;
+    }
+
+    private async void Files_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != VirtualKey.Enter || Files.SelectedItem is not FolderItem item) return;
+        e.Handled = true;
+        await OpenItemAsync(item);
     }
 
     private void Files_RightTapped(object sender, RightTappedRoutedEventArgs e)
@@ -180,6 +203,7 @@ public sealed partial class MainWindow
     private async Task<string?> PromptAsync(string title, string initial)
     {
         var input = new TextBox { Text = initial, MinWidth = 300 };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(input, "FileNameInput");
         var dialog = new ContentDialog { Title = title, Content = input, PrimaryButtonText = "OK", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary, XamlRoot = Files.XamlRoot };
         return await dialog.ShowAsync() == ContentDialogResult.Primary ? input.Text : null;
     }

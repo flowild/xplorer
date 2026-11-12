@@ -12,6 +12,7 @@
     <ApplicationDefinition Include="src\Wpf\App.xaml" />
     <Page Remove="src\Wpf\App.xaml" />
     <Compile Remove="WinUI\**\*.cs" />
+    <Compile Remove="tests\**\*.cs" />
     <Page Remove="WinUI\**\*.xaml" />
     <ApplicationDefinition Remove="WinUI\**\*.xaml" />
   </ItemGroup>

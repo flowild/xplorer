@@ -12,7 +12,13 @@ Diese `AGENTS.md` bei jeder relevanten Änderung an Anforderungen, Projektstrukt
 
 Die laufende Planung und den überprüften Projektstand in [docs/PLAN.md](docs/PLAN.md) pflegen. Nach relevanten Änderungen erledigte, offene und blockierte Schritte sowie Prüfergebnisse und Einschränkungen aktualisieren. [README.md](README.md) und [docs/UI-DECISION.md](docs/UI-DECISION.md) bei Bedarf konsistent halten.
 
-Aktueller Ausgangspunkt: WPF-Prototyp mit .NET 10 und ein separates, experimentelles WinUI-3-Projekt unter `WinUI/`; WPF-Oberfläche liegt in `src/Wpf/`, gemeinsam genutzte Logik in `src/Shared/`. Die Startdateien `Start-Xplorer-WPF.cmd` und `Start-Xplorer-WinUI.cmd` bauen und öffnen die jeweilige Fassung. Die maßgebliche Version steht in `Xplorer.csproj`. Der Nutzer möchte die WPF-Funktionen in WinUI 3 umsetzen. Die WinUI-Fassung ist noch nicht vollständig interaktiv geprüft oder als produktive Grundlage freigegeben. Einzelheiten und nächste Schritte stehen in `docs/PLAN.md`.
+Aktueller Ausgangspunkt: WPF-Prototyp mit .NET 10 und eine WinUI-3-Fassung unter `WinUI/`; WPF-Oberfläche liegt in `src/Wpf/`, gemeinsam genutzte Logik in `src/Shared/`. Der Nutzer hat WinUI 3 als Zieltechnologie festgelegt; die Fassung ist noch nicht vollständig geprüft oder veröffentlichungsreif. Die Startdateien `Start-Xplorer-WPF.cmd` und `Start-Xplorer-WinUI.cmd` bauen und öffnen die jeweilige Fassung. Die maßgebliche Version steht in `Xplorer.csproj`. Einzelheiten und nächste Schritte stehen in `docs/PLAN.md`.
+
+`NuGet.Config` legt nuget.org als Paketquelle für das Repository fest und überschreibt dafür geerbte Paketquellen. Der Restore benötigt Zugang zu nuget.org oder bereits lokal vorhandene Pakete.
+
+Der Nutzer hat für Codex `sandbox_workspace_write.network_access = true` in seiner lokalen Konfiguration aktiviert. Ob dies nach einem Sitzungsneustart unter dem verwalteten Berechtigungsprofil wirksam ist, ist noch zu prüfen; bei Bedarf Netzwerkzugriff für den Restore über den vorgesehenen Freigabemechanismus anfordern.
+
+`tests/Xplorer.Checks/` enthält einen eigenständigen Prüflauf für gemeinsam genutzte Dateisystemlogik und einfache Leistungsmessungen mit temporären Testdaten; `tests/WinUI-Smoke.ps1` prüft Start, Navigation, Suche, Erstellen, Umbenennen und Tabs per Windows UI Automation. Ausführung, Prüfumfang, Messbedingungen und offene UI- und Windows-Tests stehen in `docs/TESTING.md`.
 
 ## Produkt und Prioritäten
 
@@ -27,13 +33,16 @@ Oberfläche auch bei großen Ordnern und langsamen Netzlaufwerken reaktionsfähi
 
 ## Technische Richtung
 
-- Bevorzugter Ausgangspunkt: C# und WinUI 3 / Windows App SDK für eine native Windows-Desktopanwendung. Kompatibilität der konkret gewählten SDK- und .NET-Version mit der gewünschten Windows-10-Version vor Festlegung und Veröffentlichung überprüfen.
+- Zieltechnologie: C# und WinUI 3 / Windows App SDK für eine native Windows-Desktopanwendung. Kompatibilität der konkret gewählten SDK- und .NET-Version mit der gewünschten Windows-10-Version vor Festlegung und Veröffentlichung überprüfen.
+- Windows 10 und Windows 11 sind vorerst die Zielsysteme; konkrete Mindestversionen müssen vor Veröffentlichung geprüft und festgelegt werden. Architekturentscheidungen anhand reproduzierbarer Messungen der Geschwindigkeit und Reaktionsfähigkeit treffen; korrekte und sichere Dateioperationen bleiben Voraussetzung.
 - Oberfläche, Dateisystem und Windows-Shell, Suche sowie Einstellungen und Sitzungszustand klar trennen. Windows-Shell-Schnittstellen nutzen, wo sie Explorer-kompatibles Verhalten ermöglichen.
+- Die endgültige Umsetzung der Dateioperationen erst nach ausreichenden Funktions- und Laufzeittests entscheiden; vorhandene Implementierungen dienen bis dahin als Ausgangspunkt.
 - Everything über das offizielle [SDK und IPC](https://www.voidtools.com/support/everything/sdk/) als austauschbaren lokalen Suchanbieter anbinden. Es ist ein separates proprietäres Freeware-Programm; die Lite-Version unterstützt das SDK nicht. NTFS-Indizierung und Netzlaufwerke haben eigene Einrichtungsbedingungen. Siehe [FAQ](https://www.voidtools.com/faq/) und [Ordnerindexierung](https://www.voidtools.com/support/everything/folder_indexing/).
 - Everything nicht ungefragt installieren, als Administrator starten oder dessen Dienst konfigurieren. Status und Einrichtung dem Nutzer verständlich machen. Vor dem Mitliefern von Everything oder SDK-Dateien deren konkrete Lizenz und Weitergabebedingungen prüfen.
 
 ## Open Source und Referenzen
 
+- Für die Featureplanung und Bedienabläufe ausdrücklich an bestehenden Dateimanagern orientieren. Files ist die wichtigste Referenz; gewünschte Funktionen nach dem Vorbild von File Pilot stehen in `docs/PLAN.md`. Vor der Umsetzung konkrete Funktionen und ihr Verhalten vergleichen und für Xplorer passend priorisieren. Bewährte vorhandene Bausteine können nach Prüfung ihrer Eignung und Lizenz verwendet werden.
 - [Files](https://github.com/files-community/Files): wichtigste Referenz für moderne Windows-Oberfläche und mögliche C#-Bausteine. Das Repository enthält MIT- und MPL-2.0-Lizenztexte; vor Übernahme die Lizenz der konkreten Dateien und deren Abhängigkeiten klären, nicht automatisch eine freie Lizenzwahl annehmen.
 - [Explorer++](https://github.com/derceg/explorerplusplus): schlanker Windows-Dateimanager, GPLv3; interessant für native Windows-Integration.
 - [Double Commander](https://github.com/doublecmd/doublecmd): GPLv2, Referenz für zwei Panels, Stapeloperationen und Arbeitsabläufe.

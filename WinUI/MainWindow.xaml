@@ -2,15 +2,16 @@
   <Grid Padding="12" RowSpacing="8" KeyDown="Root_KeyDown">
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
     <TabView x:Name="Tabs" IsAddTabButtonVisible="True" AddTabButtonClick="AddTab_Click" TabCloseRequested="TabClose_Click" SelectionChanged="TabSelection_Changed" />
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5">
+    <Grid Grid.Row="1" ColumnSpacing="5">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
       <Button Content="⌂" Click="Drives_Click" ToolTipService.ToolTip="Drives" />
-      <Button Content="←" Click="Back_Click" ToolTipService.ToolTip="Back" />
-      <Button Content="→" Click="Forward_Click" ToolTipService.ToolTip="Forward" />
-      <Button Content="↑" Click="Up_Click" ToolTipService.ToolTip="Parent folder" />
-      <Button Content="⟳" Click="Refresh_Click" ToolTipService.ToolTip="Refresh" />
-      <TextBox x:Name="Address" Width="450" KeyDown="Address_KeyDown" PlaceholderText="Enter a folder path" />
-      <Button Content="Open" Click="OpenAddress_Click" />
-    </StackPanel>
+      <Button Grid.Column="1" Content="←" Click="Back_Click" ToolTipService.ToolTip="Back" />
+      <Button Grid.Column="2" Content="→" Click="Forward_Click" ToolTipService.ToolTip="Forward" />
+      <Button Grid.Column="3" Content="↑" Click="Up_Click" ToolTipService.ToolTip="Parent folder" />
+      <Button Grid.Column="4" Content="⟳" Click="Refresh_Click" ToolTipService.ToolTip="Refresh" />
+      <TextBox Grid.Column="5" x:Name="Address" MinWidth="80" KeyDown="Address_KeyDown" PlaceholderText="Enter a folder path" />
+      <Button Grid.Column="6" Content="Open" Click="OpenAddress_Click" />
+    </Grid>
     <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
       <StackPanel x:Name="Breadcrumbs" Orientation="Horizontal" Spacing="4" />
     </ScrollViewer>
@@ -26,12 +27,19 @@
         <Button Content="Refresh drives" Click="RefreshDrives_Click"/>
       </StackPanel></ScrollViewer>
       <Grid Grid.Column="1" RowSpacing="4">
-        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal" Spacing="5"><TextBox x:Name="SearchQuery" PlaceholderText="Search names in this folder" Width="270"/><Button Content="Search" Click="Search_Click"/><Button Content="Stop" Click="StopSearch_Click"/><CheckBox x:Name="FolderSizes" Content="Calculate folder sizes" IsChecked="True" Click="FolderSizes_Click"/></StackPanel>
-        <Grid Grid.Row="1" ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="130"/><ColumnDefinition Width="160"/></Grid.ColumnDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal" Spacing="5"><TextBox x:Name="SearchQuery" PlaceholderText="Search names in this folder" Width="270" KeyDown="SearchQuery_KeyDown"/><Button Content="Search" Click="Search_Click"/><Button Content="Stop" Click="StopSearch_Click"/><Button Content="Clear" Click="ClearSearch_Click" ToolTipService.ToolTip="Return to folder"/><CheckBox x:Name="FolderSizes" Content="Calculate folder sizes" IsChecked="True" Click="FolderSizes_Click"/></StackPanel>
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <Button Content="New folder" Click="NewFolder_Click"/><Button Content="New file" Click="NewFile_Click"/>
+            <Button Content="Copy" Click="Copy_Click"/><Button Content="Cut" Click="Cut_Click"/><Button Content="Paste" Click="Paste_Click"/>
+            <Button Content="Rename" Click="Rename_Click"/><Button Content="Delete" Click="Delete_Click"/>
+          </StackPanel>
+        </ScrollViewer>
+        <Grid Grid.Row="2" ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="130"/><ColumnDefinition Width="160"/></Grid.ColumnDefinitions>
           <Button Content="Name" Tag="Name" Click="Sort_Click" HorizontalAlignment="Stretch"/><Button Grid.Column="1" Content="Type" Tag="Type" Click="Sort_Click" HorizontalAlignment="Stretch"/><Button Grid.Column="2" Content="Size" Tag="Size" Click="Sort_Click" HorizontalAlignment="Stretch"/><Button Grid.Column="3" Content="Modified" Tag="Modified" Click="Sort_Click" HorizontalAlignment="Stretch"/>
         </Grid>
-        <ListView x:Name="Files" Grid.Row="2" SelectionMode="Extended" DoubleTapped="Files_DoubleTapped" RightTapped="Files_RightTapped">
+        <ListView x:Name="Files" Grid.Row="3" SelectionMode="Extended" DoubleTapped="Files_DoubleTapped" RightTapped="Files_RightTapped" KeyDown="Files_KeyDown">
           <ListView.ItemContainerStyle><Style TargetType="ListViewItem"><Setter Property="HorizontalContentAlignment" Value="Stretch" /></Style></ListView.ItemContainerStyle>
           <ListView.ItemTemplate><DataTemplate><Grid ColumnSpacing="8" ToolTipService.ToolTip="{Binding Path}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="130"/><ColumnDefinition Width="160"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Name}"/><TextBlock Grid.Column="1" Text="{Binding Type}"/><TextBlock Grid.Column="2" Text="{Binding Size}" ToolTipService.ToolTip="{Binding SizeDetail}"/><TextBlock Grid.Column="3" Text="{Binding Modified}"/></Grid></DataTemplate></ListView.ItemTemplate>
         </ListView>

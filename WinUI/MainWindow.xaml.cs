@@ -99,15 +99,20 @@ public sealed partial class MainWindow : Window
     }
     private void AddTab()
     {
-        var tab = new TabViewItem { Header = "New tab", Tag = new TabState(), IsClosable = false };
-        tab.PointerPressed += (_, e) => { if (e.GetCurrentPoint(tab).Properties.IsMiddleButtonPressed && Tabs.TabItems.Count > 1) { Tabs.TabItems.Remove(tab); e.Handled = true; } };
+        var tab = new TabViewItem { Header = "New tab", Tag = new TabState() };
+        tab.PointerPressed += (_, e) => { if (e.GetCurrentPoint(tab).Properties.IsMiddleButtonPressed && Tabs.TabItems.Count > 1) { Tabs.TabItems.Remove(tab); UpdateTabCloseButtons(); e.Handled = true; } };
         Tabs.TabItems.Add(tab);
+        UpdateTabCloseButtons();
         Tabs.SelectedItem = tab;
+    }
+    private void UpdateTabCloseButtons()
+    {
+        foreach (var tab in Tabs.TabItems.OfType<TabViewItem>()) tab.IsClosable = Tabs.TabItems.Count > 1;
     }
     private void AddTab_Click(TabView sender, object args) => AddTab();
     private void TabClose_Click(TabView sender, TabViewTabCloseRequestedEventArgs args)
     {
-        if (Tabs.TabItems.Count > 1) Tabs.TabItems.Remove(args.Tab);
+        if (Tabs.TabItems.Count > 1) { Tabs.TabItems.Remove(args.Tab); UpdateTabCloseButtons(); }
     }
     private async void TabSelection_Changed(object sender, SelectionChangedEventArgs e)
     {
@@ -128,6 +133,7 @@ public sealed partial class MainWindow : Window
                 ? new FolderContents(DrivesPath, SidebarLocations.GetDrives().Select(d => new FolderItem(d.Name, d.Path, true, "Drive", null, DateTime.MinValue)).ToList())
                 : FolderReader.Read(path, request.Token), request.Token);
             if (request.IsCancellationRequested || !ReferenceEquals(tab, active)) return;
+            bool sameFolder = string.Equals(tab.Path, result.Path, StringComparison.OrdinalIgnoreCase);
             tab.Path = result.Path;
             if (index is int target) tab.Index = target;
             else if (tab.Index < 0 || !string.Equals(tab.History[tab.Index], result.Path, StringComparison.OrdinalIgnoreCase))
@@ -135,7 +141,7 @@ public sealed partial class MainWindow : Window
             if (Tabs.SelectedItem is TabViewItem selected) selected.Header = result.Path == DrivesPath ? "Drives" : Path.GetFileName(Path.TrimEndingDirectorySeparator(result.Path)) is { Length: > 0 } name ? name : result.Path;
             Address.Text = result.Path;
             RenderBreadcrumbs(result.Path);
-            SetItems(result.Items, index is not null && string.Equals(tab.Path, result.Path, StringComparison.OrdinalIgnoreCase));
+            SetItems(result.Items, index is not null && sameFolder);
             Status.Text = $"{items.Count} items";
             StartWatching(result.Path);
             if (path != DrivesPath && FolderSizes.IsChecked == true) _ = CalculateSizesAsync(result.Items);
@@ -216,11 +222,22 @@ public sealed partial class MainWindow : Window
             SetItems(result.Items.Select(x => new FolderItem(x.Name, x.Path, x.IsDirectory, x.IsDirectory ? "Folder" : Path.GetExtension(x.Name), null, DateTime.MinValue)));
             Status.Text = $"Local search in {path}: {result.Items.Count} result(s)." + (result.LimitReached ? " Limit reached." : "") + $" {result.SkippedFolders} folder(s) skipped. Linked folders are not followed.";
         }
-        catch (OperationCanceledException) { if (ReferenceEquals(search, request)) Status.Text = "Search canceled."; }
+        catch (OperationCanceledException) { if (ReferenceEquals(search, request) && searching) Status.Text = "Search canceled."; }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException) { Status.Text = $"Search failed: {ex.Message}"; }
         finally { if (ReferenceEquals(search, request)) search = null; request.Dispose(); }
     }
     private void StopSearch_Click(object sender, RoutedEventArgs e) => search?.Cancel();
+    private async void ClearSearch_Click(object sender, RoutedEventArgs e)
+    {
+        SearchQuery.Text = "";
+        if (active?.Path is { } path) await NavigateAsync(path, active.Index);
+    }
+    private void SearchQuery_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != VirtualKey.Enter) return;
+        e.Handled = true;
+        Search_Click(sender, e);
+    }
     private async void Drives_Click(object sender, RoutedEventArgs e) => await NavigateAsync(DrivesPath);
     private async void Refresh_Click(object sender, RoutedEventArgs e) { if (active?.Path is { } path) await NavigateAsync(path, active.Index); }
     private async void OpenAddress_Click(object sender, RoutedEventArgs e) => await NavigateAsync(Address.Text);
