@@ -1,6 +1,14 @@
 using System.Diagnostics;
 using Xplorer;
 
+int benchmarkCount = 2000;
+int countIndex = Array.IndexOf(args, "--count");
+if (countIndex >= 0 && (!args.Contains("--benchmark") || countIndex + 1 >= args.Length || !int.TryParse(args[countIndex + 1], out benchmarkCount) || benchmarkCount < 1 || benchmarkCount > 100000))
+{
+    Console.Error.WriteLine("Use --benchmark --count with an integer between 1 and 100000.");
+    return 2;
+}
+
 string root = Path.Combine(Path.GetTempPath(), "Xplorer-checks-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(root);
 int failures = 0;
@@ -120,6 +128,44 @@ try
         Expect<IOException>(() => FileOperations.Transfer(sourceFile, from, true, false));
         Assert(File.ReadAllText(sourceFile) == "source" && File.ReadAllText(targetFile) == "target", "Move conflict changed data.");
     });
+    Check("repeated same-folder copies preserve existing names", () =>
+    {
+        string folder = Directory.CreateDirectory(Path.Combine(root, "copy-names")).FullName;
+        string original = Path.Combine(folder, "report.txt");
+        File.WriteAllText(original, "original");
+        File.WriteAllText(Path.Combine(folder, "report - Copy.txt"), "existing");
+        Directory.CreateDirectory(Path.Combine(folder, "report - Copy (2).txt"));
+        FileOperations.Transfer(original, folder, false, false);
+        Assert(File.ReadAllText(original) == "original", "Original changed.");
+        Assert(File.ReadAllText(Path.Combine(folder, "report - Copy.txt")) == "existing", "Existing copy changed.");
+        Assert(Directory.Exists(Path.Combine(folder, "report - Copy (2).txt")), "Existing directory changed.");
+        Assert(File.ReadAllText(Path.Combine(folder, "report - Copy (3).txt")) == "original", "Next available copy missing.");
+    });
+    Check("file and folder name conflicts preserve both sides", () =>
+    {
+        string from = Directory.CreateDirectory(Path.Combine(root, "type-source")).FullName;
+        string to = Directory.CreateDirectory(Path.Combine(root, "type-target")).FullName;
+        string file = Path.Combine(from, "file-conflict");
+        File.WriteAllText(file, "source file");
+        string existingFolder = Directory.CreateDirectory(Path.Combine(to, "file-conflict")).FullName;
+        File.WriteAllText(Path.Combine(existingFolder, "keep.txt"), "target folder");
+        Expect<IOException>(() => FileOperations.Transfer(file, to, false, false));
+        Assert(File.ReadAllText(file) == "source file" && File.ReadAllText(Path.Combine(existingFolder, "keep.txt")) == "target folder", "File-to-folder conflict changed data.");
+        string folder = Directory.CreateDirectory(Path.Combine(from, "folder-conflict")).FullName;
+        File.WriteAllText(Path.Combine(folder, "keep.txt"), "source folder");
+        string existingFile = Path.Combine(to, "folder-conflict");
+        File.WriteAllText(existingFile, "target file");
+        Expect<IOException>(() => FileOperations.Transfer(folder, to, false, false));
+        Assert(File.ReadAllText(Path.Combine(folder, "keep.txt")) == "source folder" && File.ReadAllText(existingFile) == "target file", "Folder-to-file conflict changed data.");
+    });
+    Check("missing source does not modify destination", () =>
+    {
+        string target = Directory.CreateDirectory(Path.Combine(root, "missing-target")).FullName;
+        string sentinel = Path.Combine(target, "keep.txt");
+        File.WriteAllText(sentinel, "keep");
+        Expect<FileNotFoundException>(() => FileOperations.Transfer(Path.Combine(root, "missing.txt"), target, true, false));
+        Assert(Directory.GetFileSystemEntries(target).Length == 1 && File.ReadAllText(sentinel) == "keep", "Missing source changed destination.");
+    });
     Check("drive roots cannot be transferred or recycled", () =>
     {
         string driveRoot = Path.GetPathRoot(root)!;
@@ -129,10 +175,12 @@ try
 
     if (args.Contains("--benchmark"))
     {
+        int count = benchmarkCount;
         string dataset = Directory.CreateDirectory(Path.Combine(root, "benchmark")).FullName;
-        for (int i = 0; i < 2000; i++) File.WriteAllText(Path.Combine(dataset, $"item-{i:D5}.txt"), "test");
-        Measure("folder listing, 2000 files", () => FolderReader.Read(dataset, CancellationToken.None));
-        Measure("local search, 2000 files", () => LocalSearch.Find(dataset, "item-01999", CancellationToken.None));
+        for (int i = 0; i < count; i++) File.WriteAllText(Path.Combine(dataset, $"item-{i:D6}.txt"), "test");
+        Console.WriteLine($"BENCH environment: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}; {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}; {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}; {count} files");
+        Measure($"folder listing, {count} files", () => FolderReader.Read(dataset, CancellationToken.None));
+        Measure($"local search, {count} files", () => LocalSearch.Find(dataset, $"item-{count - 1:D6}.txt", CancellationToken.None));
     }
 }
 finally

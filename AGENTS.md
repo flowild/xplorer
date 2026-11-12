@@ -16,9 +16,9 @@ Aktueller Ausgangspunkt: WPF-Prototyp mit .NET 10 und eine WinUI-3-Fassung unter
 
 `NuGet.Config` legt nuget.org als Paketquelle für das Repository fest und überschreibt dafür geerbte Paketquellen. Der Restore benötigt Zugang zu nuget.org oder bereits lokal vorhandene Pakete.
 
-Der Nutzer hat für Codex `sandbox_workspace_write.network_access = true` in seiner lokalen Konfiguration aktiviert. Ob dies nach einem Sitzungsneustart unter dem verwalteten Berechtigungsprofil wirksam ist, ist noch zu prüfen; bei Bedarf Netzwerkzugriff für den Restore über den vorgesehenen Freigabemechanismus anfordern.
+Der Nutzer hat für Codex `sandbox_workspace_write.network_access = true` in seiner lokalen Konfiguration aktiviert. Nach dem Sitzungsneustart war TCP zu api.nuget.org innerhalb der Sandbox weiterhin nicht erreichbar; ein Restore mit Sicherheitsprüfung gelang über den vorgesehenen Freigabemechanismus. Die genaue Ursache der Einschränkung ist nicht festgestellt.
 
-`tests/Xplorer.Checks/` enthält einen eigenständigen Prüflauf für gemeinsam genutzte Dateisystemlogik und einfache Leistungsmessungen mit temporären Testdaten; `tests/WinUI-Smoke.ps1` prüft Start, Navigation, Suche, Erstellen, Umbenennen und Tabs per Windows UI Automation. Ausführung, Prüfumfang, Messbedingungen und offene UI- und Windows-Tests stehen in `docs/TESTING.md`.
+`tests/Xplorer.Checks/` enthält einen eigenständigen Prüflauf für gemeinsam genutzte Dateisystemlogik und einfache Leistungsmessungen mit temporären Testdaten und wählbarer Dateianzahl; `tests/WinUI-Smoke.ps1` prüft Start, Navigation, Suche, Erstellen, Umbenennen und Tabs per Windows UI Automation; `tests/WinUI-NavigationRace.ps1` prüft schnelle Navigations-, Such- und Tabwechsel als zeitabhängigen Smoke-Test. Ausführung, Prüfumfang, Messbedingungen und offene UI- und Windows-Tests stehen in `docs/TESTING.md`.
 
 ## Produkt und Prioritäten
 
@@ -44,7 +44,7 @@ Oberfläche auch bei großen Ordnern und langsamen Netzlaufwerken reaktionsfähi
 
 ## Open Source und Referenzen
 
-- Für die Featureplanung und Bedienabläufe ausdrücklich an bestehenden Dateimanagern orientieren. Files ist die wichtigste Referenz; gewünschte Funktionen nach dem Vorbild von File Pilot stehen in `docs/PLAN.md`. Vor der Umsetzung konkrete Funktionen und ihr Verhalten vergleichen und für Xplorer passend priorisieren. Bewährte vorhandene Bausteine können nach Prüfung ihrer Eignung und Lizenz verwendet werden.
+- Das Files-Repository ist lokal unter `C:/Github/Files` im Workspace verfügbar. Für die Featureplanung und Bedienabläufe ausdrücklich an bestehenden Dateimanagern orientieren. Files ist die wichtigste Referenz; gewünschte Funktionen nach dem Vorbild von File Pilot stehen in `docs/PLAN.md`. Vor der Umsetzung konkrete Funktionen und ihr Verhalten vergleichen und für Xplorer passend priorisieren. Bewährte vorhandene Bausteine können nach Prüfung ihrer Eignung und Lizenz verwendet werden.
 - [Files](https://github.com/files-community/Files): wichtigste Referenz für moderne Windows-Oberfläche und mögliche C#-Bausteine. Das Repository enthält MIT- und MPL-2.0-Lizenztexte; vor Übernahme die Lizenz der konkreten Dateien und deren Abhängigkeiten klären, nicht automatisch eine freie Lizenzwahl annehmen.
 - [Explorer++](https://github.com/derceg/explorerplusplus): schlanker Windows-Dateimanager, GPLv3; interessant für native Windows-Integration.
 - [Double Commander](https://github.com/doublecmd/doublecmd): GPLv2, Referenz für zwei Panels, Stapeloperationen und Arbeitsabläufe.
