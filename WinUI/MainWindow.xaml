@@ -34,17 +34,18 @@
             <Button Content="New folder" Click="NewFolder_Click"/><Button Content="New file" Click="NewFile_Click"/>
             <Button Content="Copy" Click="Copy_Click"/><Button Content="Cut" Click="Cut_Click"/><Button Content="Paste" Click="Paste_Click"/>
             <Button Content="Rename" Click="Rename_Click"/><Button Content="Delete" Click="Delete_Click"/>
+            <Button Content="Select all" Click="SelectAll_Click"/><Button Content="Clear selection" Click="ClearSelection_Click"/>
           </StackPanel>
         </ScrollViewer>
         <Grid Grid.Row="2" ColumnSpacing="8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="130"/><ColumnDefinition Width="160"/></Grid.ColumnDefinitions>
           <Button Content="Name" Tag="Name" Click="Sort_Click" HorizontalAlignment="Stretch"/><Button Grid.Column="1" Content="Type" Tag="Type" Click="Sort_Click" HorizontalAlignment="Stretch"/><Button Grid.Column="2" Content="Size" Tag="Size" Click="Sort_Click" HorizontalAlignment="Stretch"/><Button Grid.Column="3" Content="Modified" Tag="Modified" Click="Sort_Click" HorizontalAlignment="Stretch"/>
         </Grid>
-        <ListView x:Name="Files" Grid.Row="3" SelectionMode="Extended" DoubleTapped="Files_DoubleTapped" RightTapped="Files_RightTapped" KeyDown="Files_KeyDown">
+        <ListView x:Name="Files" Grid.Row="3" SelectionMode="Extended" SelectionChanged="Files_SelectionChanged" DoubleTapped="Files_DoubleTapped" RightTapped="Files_RightTapped" KeyDown="Files_KeyDown">
           <ListView.ItemContainerStyle><Style TargetType="ListViewItem"><Setter Property="HorizontalContentAlignment" Value="Stretch" /></Style></ListView.ItemContainerStyle>
           <ListView.ItemTemplate><DataTemplate><Grid ColumnSpacing="8" ToolTipService.ToolTip="{Binding Path}"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="120"/><ColumnDefinition Width="130"/><ColumnDefinition Width="160"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Name}"/><TextBlock Grid.Column="1" Text="{Binding Type}"/><TextBlock Grid.Column="2" Text="{Binding Size}" ToolTipService.ToolTip="{Binding SizeDetail}"/><TextBlock Grid.Column="3" Text="{Binding Modified}"/></Grid></DataTemplate></ListView.ItemTemplate>
         </ListView>
       </Grid>
     </Grid>
-    <TextBox x:Name="Status" Grid.Row="4" IsReadOnly="True" TextWrapping="Wrap" />
+    <Grid Grid.Row="4" ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBox x:Name="Status" IsReadOnly="True" TextWrapping="Wrap"/><TextBlock x:Name="SelectionStatus" Grid.Column="1" Text="0 selected" VerticalAlignment="Center"/></Grid>
   </Grid>
 </Window>

@@ -51,6 +51,9 @@ public sealed partial class MainWindow
     private async void Rename_Click(object sender, RoutedEventArgs e) => await RenameAsync();
     private async void Delete_Click(object sender, RoutedEventArgs e) => await DeleteAsync();
 
+    private void SelectAll_Click(object sender, RoutedEventArgs e) => Files.SelectAll();
+    private void ClearSelection_Click(object sender, RoutedEventArgs e) => Files.SelectedItems.Clear();
+    private void Files_SelectionChanged(object sender, SelectionChangedEventArgs e) => SelectionStatus.Text = $"{Files.SelectedItems.Count} selected";
     private bool IsFileListFocused()
     {
         var element = FocusManager.GetFocusedElement(Files.XamlRoot) as DependencyObject;

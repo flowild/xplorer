@@ -87,6 +87,20 @@ try {
     if ($null -eq $createdItem -or -not (Test-Path -LiteralPath $createdFile -PathType Leaf)) { throw 'New file was not created and displayed.' }
     Write-Output 'PASS WinUI create file'
 
+    function Find-ListItem([string]$name) {
+        $element = Find-Element 'NameProperty' $name
+        while ($null -ne $element -and $element.Current.ControlType -ne [System.Windows.Automation.ControlType]::ListItem) { $element = [System.Windows.Automation.TreeWalker]::ControlViewWalker.GetParent($element) }
+        return $element
+    }
+    (Find-Element 'NameProperty' 'Select all').GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    $first = Find-ListItem 'ui-test-file.txt'
+    $second = Find-ListItem 'created-file.txt'
+    if ($null -eq $first -or $null -eq $second -or -not $first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or -not $second.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected) { throw 'Select all did not select both files.' }
+    if ($null -eq (Find-Element 'NameProperty' '3 selected')) { throw 'Selection count did not update.' }
+    (Find-Element 'NameProperty' 'Clear selection').GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    if ($first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or $second.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected) { throw 'Clear selection did not clear both files.' }
+    if ($null -eq (Find-Element 'NameProperty' '0 selected')) { throw 'Selection count did not reset.' }
+    Write-Output 'PASS WinUI select all and clear selection'
     $selected = $false
     $deadline = [DateTime]::UtcNow.AddSeconds(10)
     do {
