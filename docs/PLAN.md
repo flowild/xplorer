@@ -1,6 +1,6 @@
 # Xplorer – Projektstand und nächste Schritte
 
-Stand: 12. November 2026. Die App ist ein früher Windows-Prototyp, keine fertige oder veröffentlichte Anwendung. Maßgebliche Version: `Xplorer.csproj` (aktuell 0.5.0). Die Benutzeroberfläche ist Englisch.
+Stand: 12. November 2026. Die App ist ein früher Windows-Prototyp, keine fertige oder veröffentlichte Anwendung. Maßgebliche Version: `Xplorer.csproj` (aktuell 0.6.0). Die Benutzeroberfläche ist Englisch.
 
 ## Vorhanden
 
@@ -69,6 +69,7 @@ Der Nutzer hat Windows 10 und 11 vorerst als Zielsysteme festgelegt und wünscht
 - Netzwerkprüfung: nuget.org war innerhalb der eingeschränkten Agentenumgebung nicht erreichbar, außerhalb jedoch schon. Ein erzwungener WinUI-Restore ohne Cache lief mit Netzwerkfreigabe warnungsfrei; die Sandbox-Netzwerkregel wurde nicht dauerhaft geändert.
 - Auf Nutzerwunsch wurde lokal in der Codex-Konfiguration `sandbox_workspace_write.network_access = true` gesetzt. In der laufenden Sitzung blieb nuget.org in der Sandbox unerreichbar. Nach Neustart einer Sitzung erneut testen; ein verwaltetes Berechtigungsprofil kann die Einstellung übersteuern. Keine Zugangsdaten dokumentieren.
 - Die WinUI-Oberfläche bündelt Breadcrumbs und Pfadeingabe, bietet kompakte Aktions- und Einstellungsmenüs und eine verstellbare Seitenleiste. Ordnergrößeneinstellung und Seitenleistenbreite werden gespeichert. Weitere Windows-, Theme- und Bedienhilfentests bleiben offen.
+- WinUI bietet die gespeicherte Option „Show hidden items“ für Ordneransicht und lokale Suche. Ohne diese Option werden Einträge mit Windows-Hidden-Attribut und deren versteckte Unterordner ausgelassen; bestehende Einstellungen behalten das bisherige Verhalten bei.
 - Everything ist noch nicht angebunden; die Suche nutzt ausschließlich das lokale Dateisystem.
 
 Diese Datei nach relevanten Änderungen aktualisieren und offene oder nicht überprüfte Punkte ausdrücklich kennzeichnen.

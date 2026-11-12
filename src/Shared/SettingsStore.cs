@@ -1,9 +1,9 @@
-﻿using System.IO;
+using System.IO;
 using System.Text.Json;
 
 namespace Xplorer;
 
-internal sealed record AppSettings(bool CalculateFolderSizes = true, double SidebarWidth = 200);
+internal sealed record AppSettings(bool CalculateFolderSizes = true, double SidebarWidth = 200, bool ShowHiddenItems = true);
 
 internal sealed class SettingsStore(string path)
 {

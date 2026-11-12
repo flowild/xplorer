@@ -52,6 +52,8 @@ try {
     $deadline = [DateTime]::UtcNow.AddSeconds(10)
     do { Start-Sleep -Milliseconds 100; $setting = Find-Element 'NameProperty' 'Calculate folder sizes' } until ($null -ne $setting -or [DateTime]::UtcNow -ge $deadline)
     if ($null -eq $setting -or $setting.Current.ControlType -ne [System.Windows.Automation.ControlType]::CheckBox) { throw 'Folder size setting not found.' }
+    $hiddenSetting = Find-Element 'NameProperty' 'Show hidden items'
+    if ($null -eq $hiddenSetting -or $hiddenSetting.Current.ControlType -ne [System.Windows.Automation.ControlType]::CheckBox) { throw 'Hidden item setting not found.' }
     [System.Windows.Forms.SendKeys]::SendWait('{ESC}')
     Write-Output 'PASS WinUI settings menu'
 

@@ -30,7 +30,7 @@ internal sealed record FolderContents(string Path, List<FolderItem> Items);
 
 internal static class FolderReader
 {
-    public static FolderContents Read(string path, CancellationToken cancellationToken)
+    public static FolderContents Read(string path, CancellationToken cancellationToken, bool showHiddenItems = true)
     {
         var directory = new DirectoryInfo(System.IO.Path.GetFullPath(path));
         var items = new List<FolderItem>();
@@ -39,7 +39,9 @@ internal static class FolderReader
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
-                bool isDirectory = (entry.Attributes & FileAttributes.Directory) != 0;
+                var attributes = entry.Attributes;
+                if (!showHiddenItems && (attributes & FileAttributes.Hidden) != 0) continue;
+                bool isDirectory = (attributes & FileAttributes.Directory) != 0;
                 long? size = !isDirectory && entry is FileInfo file ? file.Length : null;
                 items.Add(new(entry.Name, entry.FullName, isDirectory, isDirectory ? "Folder" : entry.Extension, size, entry.LastWriteTime));
             }

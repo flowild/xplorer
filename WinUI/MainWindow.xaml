@@ -15,7 +15,7 @@
       </Grid>
       <Button Grid.Column="4" Content="⟳" Click="Refresh_Click" ToolTipService.ToolTip="Refresh" AutomationProperties.Name="Refresh"/>
       <Button Grid.Column="5" Content="⚙" ToolTipService.ToolTip="Settings" AutomationProperties.Name="Settings">
-        <Button.Flyout><Flyout><StackPanel Spacing="8" MinWidth="240"><TextBlock Text="Settings" FontWeight="SemiBold"/><CheckBox x:Name="FolderSizes" Content="Calculate folder sizes" Click="FolderSizes_Click"/><TextBlock Text="Sizes are calculated in the background." TextWrapping="Wrap" Opacity="0.7"/></StackPanel></Flyout></Button.Flyout>
+        <Button.Flyout><Flyout><StackPanel Spacing="8" MinWidth="240"><TextBlock Text="Settings" FontWeight="SemiBold"/><CheckBox x:Name="FolderSizes" Content="Calculate folder sizes" Click="FolderSizes_Click"/><CheckBox x:Name="ShowHiddenItems" Content="Show hidden items" Click="ShowHiddenItems_Click"/><TextBlock Text="Sizes are calculated in the background." TextWrapping="Wrap" Opacity="0.7"/></StackPanel></Flyout></Button.Flyout>
       </Button>
     </Grid>
     <Grid Grid.Row="2" ColumnSpacing="0">

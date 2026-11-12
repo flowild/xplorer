@@ -18,6 +18,23 @@ try
         Assert(entries.Count == 2 && entries[0].Name == "nested" && entries[0].IsDirectory, "Expected folder followed by file.");
         Assert(entries.Single(x => x.Name == "alpha.txt").SizeBytes == 5, "File size differs.");
     });
+    Check("hidden entries in folder listing and search", () =>
+    {
+        string folder = Directory.CreateDirectory(Path.Combine(root, "hidden-test")).FullName;
+        string visible = Path.Combine(folder, "visible-match.txt");
+        string hiddenFile = Path.Combine(folder, "hidden-match.txt");
+        string hiddenFolder = Directory.CreateDirectory(Path.Combine(folder, "hidden-folder")).FullName;
+        File.WriteAllText(visible, "visible"); File.WriteAllText(hiddenFile, "hidden");
+        File.WriteAllText(Path.Combine(hiddenFolder, "nested-match.txt"), "nested");
+        File.SetAttributes(hiddenFile, File.GetAttributes(hiddenFile) | FileAttributes.Hidden);
+        File.SetAttributes(hiddenFolder, File.GetAttributes(hiddenFolder) | FileAttributes.Hidden);
+        var all = FolderReader.Read(folder, CancellationToken.None).Items;
+        var filtered = FolderReader.Read(folder, CancellationToken.None, false).Items;
+        Assert(all.Count == 3 && filtered.Count == 1 && filtered[0].Name == "visible-match.txt", "Hidden entry filtering failed.");
+        var searchAll = LocalSearch.Find(folder, "match", CancellationToken.None);
+        var searchVisible = LocalSearch.Find(folder, "match", CancellationToken.None, showHiddenItems: false);
+        Assert(searchAll.Items.Count == 3 && searchVisible.Items.Count == 1 && searchVisible.Items[0].Path == visible, "Hidden search filtering failed.");
+    });
     Check("recursive search and limit", () =>
     {
         var result = LocalSearch.Find(source, "NEEDLE", CancellationToken.None);
@@ -48,6 +65,10 @@ try
         store.Save(new(false, 275));
         var loaded = new SettingsStore(path).Load();
         Assert(!loaded.CalculateFolderSizes && loaded.SidebarWidth == 275, "Settings did not persist.");
+        File.WriteAllText(path, "{\"CalculateFolderSizes\":false,\"SidebarWidth\":220}");
+        Assert(store.Load().ShowHiddenItems, "Existing settings must preserve the previous hidden-item behavior.");
+        store.Save(new(false, 220, false));
+        Assert(!store.Load().ShowHiddenItems, "Hidden-item preference did not persist.");
         File.WriteAllText(path, "not json");
         Expect<System.Text.Json.JsonException>(() => store.Load());
         Assert(File.ReadAllText(path) == "not json", "Invalid settings were overwritten.");

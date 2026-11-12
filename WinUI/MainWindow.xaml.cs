@@ -49,6 +49,7 @@ public sealed partial class MainWindow : Window
         try { settings = settingsStore.Load(); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { settingsAvailable = false; Status.Text = $"Could not load settings; existing data will not be overwritten: {ex.Message}"; }
         FolderSizes.IsChecked = settings.CalculateFolderSizes;
+        ShowHiddenItems.IsChecked = settings.ShowHiddenItems;
         SidebarColumn.Width = new GridLength(settings.SidebarWidth);
         AppWindow.Closing += (_, e) => { if (fileOperationRunning) { e.Cancel = true; Status.Text = "Wait for the file operation to finish or cancel it in the Windows dialog."; } };
         Closed += (_, _) => { watcherVersion++; watcher?.Dispose(); refreshTimer.Stop(); load?.Cancel(); sizes?.Cancel(); search?.Cancel(); };
@@ -134,12 +135,13 @@ public sealed partial class MainWindow : Window
         load?.Cancel(); sizes?.Cancel(); search?.Cancel(); searching = false;
         var request = new CancellationTokenSource(); load = request;
         var tab = active;
+        bool showHiddenItems = settings.ShowHiddenItems;
         Status.Text = "Loading folder …";
         try
         {
             var result = await Task.Run(() => path == DrivesPath
                 ? new FolderContents(DrivesPath, SidebarLocations.GetDrives().Select(d => new FolderItem(d.Name, d.Path, true, "Drive", null, DateTime.MinValue)).ToList())
-                : FolderReader.Read(path, request.Token), request.Token);
+                : FolderReader.Read(path, request.Token, showHiddenItems), request.Token);
             if (request.IsCancellationRequested || !ReferenceEquals(tab, active)) return;
             bool sameFolder = string.Equals(tab.Path, result.Path, StringComparison.OrdinalIgnoreCase);
             tab.Path = result.Path;
@@ -221,14 +223,14 @@ public sealed partial class MainWindow : Window
         if (load is not null) { Status.Text = "Wait for the folder to finish loading before searching."; return; }
         if (active?.Path is not { } path || path == DrivesPath || string.IsNullOrWhiteSpace(SearchQuery.Text)) return;
         search?.Cancel(); sizes?.Cancel(); var request = new CancellationTokenSource(); search = request;
-        var tab = active; string query = SearchQuery.Text.Trim(); searching = true;
+        var tab = active; string query = SearchQuery.Text.Trim(); bool showHiddenItems = settings.ShowHiddenItems; searching = true;
         Status.Text = $"Searching locally in {path} …";
         try
         {
-            var result = await Task.Run(() => LocalSearch.Find(path, query, request.Token), request.Token);
+            var result = await Task.Run(() => LocalSearch.Find(path, query, request.Token, showHiddenItems: showHiddenItems), request.Token);
             if (request.IsCancellationRequested || !ReferenceEquals(tab, active)) return;
             SetItems(result.Items.Select(x => new FolderItem(x.Name, x.Path, x.IsDirectory, x.IsDirectory ? "Folder" : Path.GetExtension(x.Name), null, DateTime.MinValue)));
-            Status.Text = $"Local search in {path}: {result.Items.Count} result(s)." + (result.LimitReached ? " Limit reached." : "") + $" {result.SkippedFolders} folder(s) skipped. Linked folders are not followed.";
+            Status.Text = $"Local search in {path}: {result.Items.Count} result(s)." + (result.LimitReached ? " Limit reached." : "") + $" {result.SkippedFolders} folder(s) skipped. Linked folders are not followed." + (showHiddenItems ? "" : " Hidden items excluded.");
         }
         catch (OperationCanceledException) { if (ReferenceEquals(search, request) && searching) Status.Text = "Search canceled."; }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException) { Status.Text = $"Search failed: {ex.Message}"; }
@@ -291,6 +293,12 @@ public sealed partial class MainWindow : Window
     private async void FolderSizes_Click(object sender, RoutedEventArgs e)
     {
         settings = settings with { CalculateFolderSizes = FolderSizes.IsChecked == true };
+        if (active?.Path is { } path) await NavigateAsync(path, active.Index);
+        SaveSettings();
+    }
+    private async void ShowHiddenItems_Click(object sender, RoutedEventArgs e)
+    {
+        settings = settings with { ShowHiddenItems = ShowHiddenItems.IsChecked == true };
         if (active?.Path is { } path) await NavigateAsync(path, active.Index);
         SaveSettings();
     }

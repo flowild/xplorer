@@ -7,7 +7,7 @@ internal sealed record SearchResults(List<SearchResult> Items, int SkippedFolder
 
 internal static class LocalSearch
 {
-    public static SearchResults Find(string root, string query, CancellationToken token, int limit = 1000)
+    public static SearchResults Find(string root, string query, CancellationToken token, int limit = 1000, bool showHiddenItems = true)
     {
         var results = new List<SearchResult>();
         var pending = new Stack<string>();
@@ -22,6 +22,7 @@ internal static class LocalSearch
                 {
                     token.ThrowIfCancellationRequested();
                     var attributes = entry.Attributes;
+                    if (!showHiddenItems && (attributes & FileAttributes.Hidden) != 0) continue;
                     bool directory = (attributes & FileAttributes.Directory) != 0;
                     if (entry.Name.Contains(query, StringComparison.CurrentCultureIgnoreCase))
                     {
