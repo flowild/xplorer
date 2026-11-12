@@ -21,6 +21,9 @@ public sealed partial class MainWindow : Window
         public string? Path { get; set; }
     }
     private readonly FavoritesStore favoriteStore = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Xplorer", "favorites.json"));
+    private readonly SettingsStore settingsStore = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Xplorer", "settings.json"));
+    private AppSettings settings = new();
+    private bool settingsAvailable = true;
     private readonly List<string> favorites = [];
     private readonly ObservableCollection<FolderItem> items = [];
     private readonly SemaphoreSlim sizeWorkers = new(2);
@@ -43,6 +46,10 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         Files.ItemsSource = items;
         UpdateSortHeaders();
+        try { settings = settingsStore.Load(); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { settingsAvailable = false; Status.Text = $"Could not load settings; existing data will not be overwritten: {ex.Message}"; }
+        FolderSizes.IsChecked = settings.CalculateFolderSizes;
+        SidebarColumn.Width = new GridLength(settings.SidebarWidth);
         AppWindow.Closing += (_, e) => { if (fileOperationRunning) { e.Cancel = true; Status.Text = "Wait for the file operation to finish or cancel it in the Windows dialog."; } };
         Closed += (_, _) => { watcherVersion++; watcher?.Dispose(); refreshTimer.Stop(); load?.Cancel(); sizes?.Cancel(); search?.Cancel(); };
         sortTimer.Tick += (_, _) => { sortTimer.Stop(); if (sortColumn == "Size") SetItems(items.ToList(), true); };
@@ -145,7 +152,7 @@ public sealed partial class MainWindow : Window
             SetItems(result.Items, index is not null && sameFolder);
             Status.Text = $"{items.Count} items";
             StartWatching(result.Path);
-            if (path != DrivesPath && FolderSizes.IsChecked == true) _ = CalculateSizesAsync(result.Items);
+            if (path != DrivesPath && settings.CalculateFolderSizes) _ = CalculateSizesAsync(result.Items);
         }
         catch (OperationCanceledException) { }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or System.Security.SecurityException)
@@ -174,7 +181,7 @@ public sealed partial class MainWindow : Window
     private void RenderBreadcrumbs(string path)
     {
         Breadcrumbs.Children.Clear();
-        if (path == DrivesPath) return;
+        if (path == DrivesPath) { Breadcrumbs.Children.Add(new TextBlock { Text = "Drives", VerticalAlignment = VerticalAlignment.Center }); return; }
         foreach (var crumb in BreadcrumbBuilder.Build(path))
         {
             var button = new Button { Content = crumb.Name };
@@ -241,8 +248,25 @@ public sealed partial class MainWindow : Window
     }
     private async void Drives_Click(object sender, RoutedEventArgs e) => await NavigateAsync(DrivesPath);
     private async void Refresh_Click(object sender, RoutedEventArgs e) { if (active?.Path is { } path) await NavigateAsync(path, active.Index); }
-    private async void OpenAddress_Click(object sender, RoutedEventArgs e) => await NavigateAsync(Address.Text);
-    private async void Address_KeyDown(object sender, KeyRoutedEventArgs e) { if (e.Key == VirtualKey.Enter) await NavigateAsync(Address.Text); }
+    private void EditAddress_Click(object sender, RoutedEventArgs e) => BeginEditAddress();
+    private void BeginEditAddress()
+    {
+        Address.Text = active?.Path ?? "";
+        BreadcrumbView.Visibility = Visibility.Collapsed;
+        Address.Visibility = Visibility.Visible;
+        Address.Focus(FocusState.Programmatic);
+        Address.SelectAll();
+    }
+    private void Address_LostFocus(object sender, RoutedEventArgs e)
+    {
+        Address.Visibility = Visibility.Collapsed;
+        BreadcrumbView.Visibility = Visibility.Visible;
+    }
+    private async void Address_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Enter) { e.Handled = true; string path = Address.Text; await NavigateAsync(path); Files.Focus(FocusState.Programmatic); }
+        else if (e.Key == VirtualKey.Escape) { e.Handled = true; Files.Focus(FocusState.Programmatic); }
+    }
     private async void Back_Click(object sender, RoutedEventArgs e) { if (active is { Index: > 0 } tab) await NavigateAsync(tab.History[tab.Index - 1], tab.Index - 1); }
     private async void Forward_Click(object sender, RoutedEventArgs e) { if (active is { } tab && tab.Index + 1 < tab.History.Count) await NavigateAsync(tab.History[tab.Index + 1], tab.Index + 1); }
     private async void Up_Click(object sender, RoutedEventArgs e) { if (active?.Path is not { } path || path == DrivesPath) return; await NavigateAsync(Directory.GetParent(path)?.FullName ?? DrivesPath); }
@@ -264,7 +288,33 @@ public sealed partial class MainWindow : Window
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, activeColumn ? $"{column}, sorted {(descending ? "descending" : "ascending")}" : $"Sort by {column}");
         }
     }
-    private async void FolderSizes_Click(object sender, RoutedEventArgs e) { if (active?.Path is { } path) await NavigateAsync(path, active.Index); }
+    private async void FolderSizes_Click(object sender, RoutedEventArgs e)
+    {
+        settings = settings with { CalculateFolderSizes = FolderSizes.IsChecked == true };
+        if (active?.Path is { } path) await NavigateAsync(path, active.Index);
+        SaveSettings();
+    }
+    private void SidebarSplitter_DragDelta(object sender, Microsoft.UI.Xaml.Controls.Primitives.DragDeltaEventArgs e)
+        => SidebarColumn.Width = new GridLength(Math.Clamp(SidebarColumn.ActualWidth + e.HorizontalChange, 140, 400));
+    private void SidebarSplitter_DragCompleted(object sender, Microsoft.UI.Xaml.Controls.Primitives.DragCompletedEventArgs e)
+    {
+        settings = settings with { SidebarWidth = SidebarColumn.Width.Value };
+        SaveSettings();
+    }
+    private void SidebarSplitter_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key is not (VirtualKey.Left or VirtualKey.Right)) return;
+        SidebarColumn.Width = new GridLength(Math.Clamp(SidebarColumn.ActualWidth + (e.Key == VirtualKey.Left ? -16 : 16), 140, 400));
+        settings = settings with { SidebarWidth = SidebarColumn.Width.Value };
+        SaveSettings();
+        e.Handled = true;
+    }
+    private void SaveSettings()
+    {
+        if (!settingsAvailable) { Status.Text = "Settings could not be loaded and will not be overwritten."; return; }
+        try { settingsStore.Save(settings); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Status.Text = $"Could not save settings: {ex.Message}"; }
+    }
     private async void Files_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
         if (Files.SelectedItem is not FolderItem item) return;

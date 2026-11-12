@@ -17,6 +17,7 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2957" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.6.5" />
     <Compile Include="..\src\Shared\FolderReader.cs" Link="Shared\FolderReader.cs" />
+    <Compile Include="..\src\Shared\SettingsStore.cs" Link="Shared\SettingsStore.cs" />
     <Compile Include="..\src\Shared\FavoritesStore.cs" Link="Shared\FavoritesStore.cs" />
     <Compile Include="..\src\Shared\LocalSearch.cs" Link="Shared\LocalSearch.cs" />
     <Compile Include="..\src\Shared\SidebarLocations.cs" Link="Shared\SidebarLocations.cs" />

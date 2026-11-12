@@ -1,6 +1,6 @@
 # Xplorer – Projektstand und nächste Schritte
 
-Stand: 12. November 2026. Die App ist ein früher Windows-Prototyp, keine fertige oder veröffentlichte Anwendung. Maßgebliche Version: `Xplorer.csproj` (aktuell 0.1.0). Die Benutzeroberfläche ist Englisch.
+Stand: 12. November 2026. Die App ist ein früher Windows-Prototyp, keine fertige oder veröffentlichte Anwendung. Maßgebliche Version: `Xplorer.csproj` (aktuell 0.5.0). Die Benutzeroberfläche ist Englisch.
 
 ## Vorhanden
 
@@ -68,6 +68,7 @@ Der Nutzer hat Windows 10 und 11 vorerst als Zielsysteme festgelegt und wünscht
 - Ressourcenuntersuchung: Ein isolierter WinUI-Build ohne Kopierregel startete auf Windows-Build 26300; alle neun UI-Smoke-Prüfungen bestanden. Der frühere Fehler ließ sich dort nicht reproduzieren. Die Kopierregel bleibt bis zu Tests des Verteilungswegs auf Windows 10 und 11 bestehen; sichtbare Darstellung, Veröffentlichung und ursprüngliche Fehlerursache sind offen. Einzelheiten und Build-Warnungen siehe [UI-DECISION.md](UI-DECISION.md).
 - Netzwerkprüfung: nuget.org war innerhalb der eingeschränkten Agentenumgebung nicht erreichbar, außerhalb jedoch schon. Ein erzwungener WinUI-Restore ohne Cache lief mit Netzwerkfreigabe warnungsfrei; die Sandbox-Netzwerkregel wurde nicht dauerhaft geändert.
 - Auf Nutzerwunsch wurde lokal in der Codex-Konfiguration `sandbox_workspace_write.network_access = true` gesetzt. In der laufenden Sitzung blieb nuget.org in der Sandbox unerreichbar. Nach Neustart einer Sitzung erneut testen; ein verwaltetes Berechtigungsprofil kann die Einstellung übersteuern. Keine Zugangsdaten dokumentieren.
+- Die WinUI-Oberfläche bündelt Breadcrumbs und Pfadeingabe, bietet kompakte Aktions- und Einstellungsmenüs und eine verstellbare Seitenleiste. Ordnergrößeneinstellung und Seitenleistenbreite werden gespeichert. Weitere Windows-, Theme- und Bedienhilfentests bleiben offen.
 - Everything ist noch nicht angebunden; die Suche nutzt ausschließlich das lokale Dateisystem.
 
 Diese Datei nach relevanten Änderungen aktualisieren und offene oder nicht überprüfte Punkte ausdrücklich kennzeichnen.

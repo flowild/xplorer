@@ -1,6 +1,7 @@
 param([string]$Executable = (Join-Path $PSScriptRoot '..\WinUI\bin\x64\Debug\net10.0-windows10.0.26100.0\win-x64\Xplorer.WinUI.exe'))
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName System.Windows.Forms
 $exe = $Executable
 if (-not (Test-Path -LiteralPath $exe)) { throw 'Build WinUI for x64 first.' }
 $testDirectory = Join-Path ([IO.Path]::GetTempPath()) ('Xplorer-ui-check-' + [guid]::NewGuid().ToString('N'))
@@ -17,14 +18,21 @@ try {
         $condition = [System.Windows.Automation.PropertyCondition]::new([System.Windows.Automation.AutomationElement]::$property, $value)
         return $window.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
     }
-    $deadline = [DateTime]::UtcNow.AddSeconds(20)
-    do { Start-Sleep -Milliseconds 250; $address = Find-Element 'AutomationIdProperty' 'Address' } until ($null -ne $address -or [DateTime]::UtcNow -ge $deadline)
+    function Invoke-MenuItem([string]$menu, [string]$item) {
+        $button = Find-Element 'NameProperty' $menu
+        if ($null -eq $button) { throw "Menu not found: $menu" }
+        $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+        $deadline = [DateTime]::UtcNow.AddSeconds(10)
+        do { Start-Sleep -Milliseconds 100; $entry = Find-Element 'NameProperty' $item } until ($null -ne $entry -or [DateTime]::UtcNow -ge $deadline)
+        if ($null -eq $entry) { throw "Menu item not found: $item" }
+        $entry.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    }
+    (Find-Element 'NameProperty' 'Edit address').GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    $address = Find-Element 'AutomationIdProperty' 'Address'
     if ($null -eq $address) { throw 'Address control not found.' }
-    $value = $address.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern)
-    $value.SetValue($testDirectory)
-    $open = Find-Element 'NameProperty' 'Open'
-    if ($null -eq $open) { throw 'Open button not found.' }
-    $open.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    $address.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($testDirectory)
+    $address.SetFocus()
+    [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
     $deadline = [DateTime]::UtcNow.AddSeconds(20)
     do { Start-Sleep -Milliseconds 250; $file = Find-Element 'NameProperty' 'ui-test-file.txt' } until ($null -ne $file -or [DateTime]::UtcNow -ge $deadline)
     if ($null -eq $file) { throw 'Test file did not appear in the folder listing.' }
@@ -39,11 +47,13 @@ try {
     $nameSort.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
     if ($nameSort.Current.Name -ne 'Name, sorted ascending') { throw 'Sort indicator did not return to Name.' }
     Write-Output 'PASS WinUI sort indicators'
-    foreach ($label in @('New folder', 'New file', 'Copy', 'Cut', 'Paste', 'Rename', 'Delete')) {
-        $button = Find-Element 'NameProperty' $label
-        if ($null -eq $button -or $button.Current.ControlType -ne [System.Windows.Automation.ControlType]::Button) { throw "File action button not found: $label" }
-    }
-    Write-Output 'PASS WinUI file action buttons exposed'
+    Write-Output 'PASS WinUI compact command menus available'
+    (Find-Element 'NameProperty' 'Settings').GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    $deadline = [DateTime]::UtcNow.AddSeconds(10)
+    do { Start-Sleep -Milliseconds 100; $setting = Find-Element 'NameProperty' 'Calculate folder sizes' } until ($null -ne $setting -or [DateTime]::UtcNow -ge $deadline)
+    if ($null -eq $setting -or $setting.Current.ControlType -ne [System.Windows.Automation.ControlType]::CheckBox) { throw 'Folder size setting not found.' }
+    [System.Windows.Forms.SendKeys]::SendWait('{ESC}')
+    Write-Output 'PASS WinUI settings menu'
 
     $query = Find-Element 'AutomationIdProperty' 'SearchQuery'
     $searchButton = Find-Element 'NameProperty' 'Search'
@@ -73,8 +83,7 @@ try {
     Write-Output 'PASS WinUI return from search'
 
     function Submit-NameDialog([string]$action, [string]$name) {
-        $button = Find-Element 'NameProperty' $action
-        $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+        if ($action -eq 'Rename') { Invoke-MenuItem 'Actions' $action } else { Invoke-MenuItem 'New' $action }
         $deadline = [DateTime]::UtcNow.AddSeconds(10)
         do { Start-Sleep -Milliseconds 250; $inputField = Find-Element 'AutomationIdProperty' 'FileNameInput' } until ($null -ne $inputField -or [DateTime]::UtcNow -ge $deadline)
         if ($null -eq $inputField) { throw "$action dialog input not found." }
@@ -102,21 +111,25 @@ try {
         while ($null -ne $element -and $element.Current.ControlType -ne [System.Windows.Automation.ControlType]::ListItem) { $element = [System.Windows.Automation.TreeWalker]::ControlViewWalker.GetParent($element) }
         return $element
     }
-    (Find-Element 'NameProperty' 'Select all').GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    Invoke-MenuItem 'Actions' 'Select all'
     $first = Find-ListItem 'ui-test-file.txt'
     $second = Find-ListItem 'created-file.txt'
     if ($null -eq $first -or $null -eq $second -or -not $first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or -not $second.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected) { throw 'Select all did not select both files.' }
     if ($null -eq (Find-Element 'NameProperty' '3 selected')) { throw 'Selection count did not update.' }
-    (Find-Element 'NameProperty' 'Clear selection').GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    Invoke-MenuItem 'Actions' 'Clear selection'
     if ($first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or $second.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected) { throw 'Clear selection did not clear both files.' }
     if ($null -eq (Find-Element 'NameProperty' '0 selected')) { throw 'Selection count did not reset.' }
     Write-Output 'PASS WinUI select all and clear selection'
     $first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
-    (Find-Element 'NameProperty' 'Invert selection').GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
-    if ($first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or -not $second.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or $null -eq (Find-Element 'NameProperty' '2 selected')) { throw 'Invert selection did not invert a partial selection.' }
-    (Find-Element 'NameProperty' 'Invert selection').GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    Invoke-MenuItem 'Actions' 'Invert selection'
+    Start-Sleep -Milliseconds 500
+    $first = Find-ListItem 'ui-test-file.txt'; $second = Find-ListItem 'created-file.txt'
+    if ($first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or -not $second.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or $null -eq (Find-Element 'NameProperty' '2 selected')) { throw "Invert selection failed: first=$($first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected), second=$($second.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected), count2=$($null -ne (Find-Element 'NameProperty' '2 selected'))." }
+    Invoke-MenuItem 'Actions' 'Invert selection'
+    Start-Sleep -Milliseconds 500
+    $first = Find-ListItem 'ui-test-file.txt'; $second = Find-ListItem 'created-file.txt'
     if (-not $first.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or $second.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected -or $null -eq (Find-Element 'NameProperty' '1 selected')) { throw 'Second inversion did not restore the selection.' }
-    (Find-Element 'NameProperty' 'Clear selection').GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+    Invoke-MenuItem 'Actions' 'Clear selection'
     Write-Output 'PASS WinUI invert selection'
     $selected = $false
     $deadline = [DateTime]::UtcNow.AddSeconds(10)

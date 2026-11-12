@@ -9,6 +9,7 @@
     <Compile Include="..\..\src\Shared\FolderReader.cs" Link="FolderReader.cs" />
     <Compile Include="..\..\src\Shared\LocalSearch.cs" Link="LocalSearch.cs" />
     <Compile Include="..\..\src\Shared\FileOperations.cs" Link="FileOperations.cs" />
+    <Compile Include="..\..\src\Shared\SettingsStore.cs" Link="SettingsStore.cs" />
     <Compile Include="..\..\src\Shared\FavoritesStore.cs" Link="FavoritesStore.cs" />
     <Compile Include="..\..\src\Shared\NavigationHelpers.cs" Link="NavigationHelpers.cs" />
   </ItemGroup>

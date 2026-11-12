@@ -22,7 +22,7 @@ public sealed partial class MainWindow
         bool control = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) != 0;
         bool shift = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & CoreVirtualKeyStates.Down) != 0;
         bool alt = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu) & CoreVirtualKeyStates.Down) != 0;
-        if (control && !shift && !alt && e.Key == VirtualKey.L) { Address.Focus(FocusState.Programmatic); Address.SelectAll(); e.Handled = true; }
+        if (control && !shift && !alt && e.Key == VirtualKey.L) { BeginEditAddress(); e.Handled = true; }
         else if (control && !shift && !alt && e.Key == VirtualKey.F) { SearchQuery.Focus(FocusState.Programmatic); SearchQuery.SelectAll(); e.Handled = true; }
         else if (alt && !control && !shift && e.Key == VirtualKey.Left && active is { Index: > 0 } back) { e.Handled = true; await NavigateAsync(back.History[back.Index - 1], back.Index - 1); }
         else if (alt && !control && !shift && e.Key == VirtualKey.Right && active is { } forward && forward.Index + 1 < forward.History.Count) { e.Handled = true; await NavigateAsync(forward.History[forward.Index + 1], forward.Index + 1); }

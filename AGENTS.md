@@ -24,6 +24,8 @@ Der Nutzer hat für Codex `sandbox_workspace_write.network_access = true` in sei
 
 Die Benutzeroberfläche der Anwendung einschließlich Beschriftungen, Status- und Fehlermeldungen muss auf Englisch sein.
 
+Die WinUI-Oberfläche soll sich stärker an Files orientieren: schlicht und übersichtlich, mit leicht erreichbaren Aktionen, einer einzigen Pfaddarstellung, einem erweiterbaren Einstellungsmenü und getrennten, soweit sinnvoll verschiebbaren Bereichen.
+
 1. Zuerst ein stabiles Grundprodukt: Navigation, Breadcrumbs, Tabs, Favoriten, Verlauf, Listen- und Detailansicht, Sortierung und Mehrfachauswahl.
 2. Zuverlässige Dateioperationen: Öffnen, Kopieren, Verschieben, Umbenennen, Erstellen und Löschen über den Papierkorb; Konflikte, Fortschritt, Abbruch und Fehler verständlich behandeln. Drag-and-drop, Windows-Tastenkürzel, Dateisymbole und Shell-Kontextmenüs berücksichtigen.
 3. Everything optional für schnelle Suche integrieren; ohne verfügbare Everything-Instanz eine verständliche lokale Ordnersuche anbieten. Suchbereich und verwendete Suchquelle anzeigen. Die normale Dateiverwaltung darf nicht von Everything abhängen.

@@ -40,6 +40,18 @@ try
         var saved = new FavoritesStore(Path.Combine(root, "settings", "favorites.json")).Load();
         Assert(saved.Count == 1 && saved[0] == source, "Favorites were not preserved or filtered.");
     });
+    Check("settings persistence and invalid data protection", () =>
+    {
+        string path = Path.Combine(root, "settings-check", "settings.json");
+        var store = new SettingsStore(path);
+        Assert(store.Load().CalculateFolderSizes && store.Load().SidebarWidth == 200, "Defaults differ.");
+        store.Save(new(false, 275));
+        var loaded = new SettingsStore(path).Load();
+        Assert(!loaded.CalculateFolderSizes && loaded.SidebarWidth == 275, "Settings did not persist.");
+        File.WriteAllText(path, "not json");
+        Expect<System.Text.Json.JsonException>(() => store.Load());
+        Assert(File.ReadAllText(path) == "not json", "Invalid settings were overwritten.");
+    });
     Check("breadcrumbs and sorting", () =>
     {
         var crumbs = BreadcrumbBuilder.Build(nested);
